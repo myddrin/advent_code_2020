@@ -15,3 +15,7 @@ rstest = "0.6.4"
 [[bin]]
 name="day_01"
 path="day_01/main.rs"
+
+[[bin]]
+name="day_02"
+path="day_02/main.rs"
