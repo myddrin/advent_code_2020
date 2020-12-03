@@ -24,8 +24,12 @@ impl Map {
         Ok(rv)
     }
 
-    fn start_position(&self) -> Position {
-        Position{x: 0, y: 0}
+    fn new_slope(&self, slope: &Position) -> Slope {
+        Slope{
+            slope: slope.clone(),
+            current_position: Position::new(0, 0),
+            max_height: self.height(),
+        }
     }
 
     fn width(&self) -> usize {
@@ -41,20 +45,23 @@ impl Map {
     }
 
     fn count_trees_on_slope(&self, slope: &Position) -> usize {
-        let mut tree_count = 0;
-        let mut current_position = self.start_position();
-        while current_position.y < self.height() {
-            if self.is_tree_at(&current_position) {
-                tree_count += 1;
-            }
+        self.new_slope(slope)
+            .filter(|p| self.is_tree_at(p))
+            .count()
+    }
 
-            current_position = current_position.next_position(slope);
+    fn mult_trees_on_slopes(&self, slopes: &[Position]) -> usize {
+        let mut mult = 1;
+        for slope in slopes {
+            let trees = self.count_trees_on_slope(slope);
+            // println!("Found {} trees using slope {:?}", trees, slope);
+            mult *= trees;
         }
-        tree_count
+        mult
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Position {
     x: usize,
     y: usize,
@@ -64,9 +71,26 @@ impl Position {
     fn new(x: usize, y: usize) -> Position {
         Position{x, y}
     }
+}
 
-    fn next_position(&self, slope: &Position) -> Position {
-        Position::new(self.x + slope.x, self.y + slope.y)
+#[derive(Debug)]
+struct Slope {
+    slope: Position,
+    current_position: Position,
+    max_height: usize,
+}
+
+impl Iterator for Slope {
+    type Item = Position;
+
+    fn next(&mut self) -> Option<Position> {
+        self.current_position.x += self.slope.x;
+        self.current_position.y += self.slope.y;
+        if self.current_position.y < self.max_height {
+            Some(self.current_position.clone())
+        } else {
+            None
+        }
     }
 }
 
@@ -76,21 +100,15 @@ fn main() {
 
     let slope = Position{x: 3, y: 1};
     let tree_count = tree_map.count_trees_on_slope(&slope);
-
     println!("Q1: Found {} trees using slope {:?}", tree_count, slope);
 
-    let mut mult = 1;  // we know that we'll find at least 1 tree
-    for slope in vec!(
+    let mult = tree_map.mult_trees_on_slopes(&[
         Position::new(1, 1),
         Position::new(3, 1),
         Position::new(5, 1),
         Position::new(7, 1),
         Position::new(1, 2),
-    ) {
-        let trees = tree_map.count_trees_on_slope(&slope);
-        println!("Found {} trees using slope {:?}", trees, slope);
-        mult *= trees;
-    }
+    ]);
     println!("Q2: mult of trees is {}", mult);
 }
 
@@ -104,5 +122,35 @@ mod tests {
     )]
     fn test_from_line(input: &str, map_line: Vec<bool>) {
         assert_eq!(Map::from_string(input.to_string()), map_line)
+    }
+
+    #[rstest(file, slope, exp_trees,
+    case(&"day_03/test_1.txt", Position{x: 3, y: 1}, 7),
+    )]
+    fn test_count_trees(file: &str, slope: Position, exp_trees: usize) {
+        let tree_map = Map::read(file);
+        assert!(tree_map.is_ok());
+        let tree_map = tree_map.unwrap();
+        assert_eq!(tree_map.count_trees_on_slope(&slope), exp_trees);
+    }
+
+    #[rstest(file, slopes, exp_trees,
+    case(
+        &"day_03/test_1.txt",
+        &[
+            Position::new(1, 1),
+            Position::new(3, 1),
+            Position::new(5, 1),
+            Position::new(7, 1),
+            Position::new(1, 2),
+        ],
+        336,
+    )
+    )]
+    fn test_mult_trees(file: &str, slopes: &[Position], exp_trees: usize) {
+        let tree_map = Map::read(file);
+        assert!(tree_map.is_ok());
+        let tree_map = tree_map.unwrap();
+        assert_eq!(tree_map.mult_trees_on_slopes(slopes), exp_trees);
     }
 }
