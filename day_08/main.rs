@@ -50,9 +50,11 @@ impl Instruction {
 
         for line in br.lines() {
             let line = line?;
-            // TODO(tr) handle bad line to io::Error
-            let op = Self::from_string(line).unwrap();
-            rv.push(op);
+            if let Some(op) = Self::from_string(line) {
+                rv.push(op);
+            } else {
+                return Err(io::Error::new(io::ErrorKind::Other, "bad line"));
+            }
         }
         Ok(rv)
     }
@@ -66,11 +68,7 @@ impl Instruction {
     }
 
     fn to_program(code: &[Instruction]) -> Vec<(&Instruction, Option<i32>)> {
-        let mut rv = Vec::new();
-        for op in code {
-            rv.push((op, None));
-        }
-        rv
+        code.iter().map(|v| (v, None)).collect()
     }
 
     fn fix_and_run(code: &[Instruction], change: usize) -> Option<i32> {

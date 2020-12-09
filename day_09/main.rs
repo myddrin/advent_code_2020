@@ -9,8 +9,11 @@ fn read(path: &str) -> io::Result<Vec<u64>> {
 
     for line in br.lines() {
         let line = line?;
-        let v = line.parse().unwrap();
-        rv.push(v);
+        if let Ok(v) = line.parse() {
+            rv.push(v);
+        } else {
+            return Err(io::Error::new(io::ErrorKind::Other, "invalid line"));
+        }
     }
     Ok(rv)
 }
@@ -63,6 +66,7 @@ fn has_weakness(values: &[u64], invalid: u64, size: usize) -> Option<Vec<u64>> {
 }
 
 fn search_weakness(values: &[u64], invalid: u64) -> Option<Vec<u64>> {
+    eprintln!("Scanning...");
     for size in 2..values.len() {
         if size % 10 == 0 {
             eprintln!("Scanning for size {}", size);
@@ -87,7 +91,8 @@ fn main() {
         if let Some(weakness) = weakness {
             let min = weakness.iter().min().unwrap();
             let max = weakness.iter().max().unwrap();
-            println!("Q2: smallest {} and largest {}: {}",
+            println!("Q2: list of {} elem, smallest {} and largest {}: {}",
+                weakness.len(),
                 min,
                 max,
                 min + max
