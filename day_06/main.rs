@@ -1,6 +1,6 @@
 use std::{io, env};
 use std::fs::File;
-use std::io::{BufReader, BufRead, Error};
+use std::io::{BufReader, BufRead};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]

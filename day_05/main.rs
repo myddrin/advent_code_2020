@@ -1,7 +1,7 @@
 use std::{io, env};
 use std::fs::File;
 use std::io::{BufReader, BufRead};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 #[derive(Debug)]
 struct Seat {
@@ -9,7 +9,7 @@ struct Seat {
     seat: usize,  // 0=Leftmost, 7=rightmost
 }
 
-fn update_range(mut range: (usize, usize), upper: bool) -> (usize, usize) {
+fn update_range(range: (usize, usize), upper: bool) -> (usize, usize) {
     let half_size = ((range.1 - range.0) + 1) / 2;
     if upper {
         (range.0, range.1 - half_size)
@@ -60,7 +60,7 @@ fn find_my_seat(seats: &[Seat]) -> Option<Seat> {
     let max_seat = seat_map.iter().max().unwrap();
     println!("Q1: Max id is {}", max_seat);
 
-    for i in (1 as usize..*max_seat) {
+    for i in 1 as usize..*max_seat {
         if seat_map.contains(&i) {
             continue;
         }
