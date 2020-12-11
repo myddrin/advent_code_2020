@@ -133,7 +133,6 @@ impl Seat {
                     n.push(p);
                 }
             }
-            // println!("{:?} has {} neighbours: {:?}", s, neighbours.len(), neighbours);
             assert!(n.len() <= 16);
             neighbours.insert(s.position.clone(), n);
         }
@@ -144,43 +143,51 @@ impl Seat {
         neighbours_idx.iter().map(|u| &seat_map[u]).collect()
     }
 
-    fn do_prediction(seat_map: &HashMap<Position, Seat>, neighbours_pos: &HashMap<Position, Vec<Position>>, max_neighbours: usize) -> HashMap<Position, Seat> {
-        let changes: Vec<(Position, bool)> = seat_map.values()
+    fn do_prediction(seat_map: &HashMap<Position, Seat>, neighbours_pos: &HashMap<Position, Vec<Position>>, max_neighbours: usize) -> Vec<(Position, bool)> {
+        seat_map.values()
             .map(|s| (s.position.clone(), s.new_state(
                 &Self::neighbours(seat_map, &neighbours_pos[&s.position]),
                 max_neighbours,
-            ))).collect();
-        // then apply the new state
-        // because I could not change seats dirrectly it's already borrowed immutably
-        let mut new_seats: HashMap<Position, Seat> = HashMap::new();
-        for (p, s) in changes.iter() {
-            let mut seat = seat_map[p].clone();
-            seat.empty = *s;
-            new_seats.insert(seat.position.clone(), seat);
-        }
-        new_seats
+            )))
+            .collect()
     }
 
-    fn predict_q1(seat_map: &HashMap<Position, Seat>) -> usize {
+    fn predict(
+        seat_map: &HashMap<Position, Seat>,
+        neighbours_pos: &HashMap<Position, Vec<Position>>,
+        max_neighbours: usize
+    ) -> usize {
         let mut seat_map = seat_map.clone();
         let mut compute = true;
         let mut t: usize = 0;
-        let neighbours_pos = Self::build_neighbours_q1(&seat_map);
+
         while compute {
-            let new_seats = Self::do_prediction(&seat_map, &neighbours_pos, 4);
+            let changes = Self::do_prediction(&seat_map, &neighbours_pos, max_neighbours);
 
-            let n_change = new_seats.values()
-                .filter(|&s| s.empty != seat_map[&s.position].empty)
-                .count();
-            // println!("i={} changes={}", t, n_change);
+            let mut n_change = 0;
+            for (p, s) in changes.iter() {
+                let mut o = seat_map.get_mut(p).unwrap();
+                if o.empty != *s {
+                    n_change += 1;
+                }
+                o.empty = *s;
+            }
             compute = n_change > 0;
-
-            seat_map = new_seats;
             t += 1;
         }
 
         println!("Computed in {} iterations", t);
         seat_map.values().filter(|&s|!s.empty).count()
+    }
+
+    fn predict_q1(seat_map: &HashMap<Position, Seat>) -> usize {
+        let neighbours_pos = Self::build_neighbours_q1(&seat_map);
+        Self::predict(seat_map, &neighbours_pos, 4)
+    }
+
+    fn predict_q2(seat_map: &HashMap<Position, Seat>) -> usize {
+        let neighbours_pos = Self::build_neighbours_q2(&seat_map);
+        Self::predict(seat_map, &neighbours_pos, 5)
     }
 
     fn to_map(seats: Vec<Seat>) -> HashMap<Position, Seat> {
@@ -189,29 +196,6 @@ impl Seat {
             map.insert(s.position.clone(), s);
         }
         map
-    }
-
-    fn predict_q2(seat_map: &HashMap<Position, Seat>) -> usize {
-        let mut seat_map = seat_map.clone();
-        let mut compute = true;
-        let mut t: usize = 0;
-        let neighbours_idx = Self::build_neighbours_q2(&seat_map);
-        while compute {
-            let new_seats = Self::do_prediction(&seat_map, &neighbours_idx, 5);
-
-            let n_change = new_seats.values()
-                .filter(|&s| s.empty != seat_map[&s.position].empty)
-                .count();
-            // println!("i={} changes={}", t, n_change);
-            // Self::print(&new_seats);
-            compute = n_change > 0;
-
-            seat_map = new_seats;
-            t += 1;
-        }
-
-        println!("Computed in {} iterations", t);
-        seat_map.values().filter(|&s|!s.empty).count()
     }
 
     fn to_strings(seat_map: &HashMap<Position, Seat>) -> Vec<String> {
@@ -315,7 +299,7 @@ mod tests {
 
     #[rstest(path, exp_seats,
     case(&"day_11/test_1.txt", 26),
-    // case(&"day_11/input.txt", 2247),
+    case(&"day_11/input.txt", 2011),
     )]
     fn test_predict_q2(path: &str, exp_seats: usize) {
         let contents = Seat::read(&path);
