@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 combinations = "0.1.0"
+regex = "1.4.2"
 
 [dev-dependencies]
 rstest = "0.6.4"
@@ -83,3 +84,7 @@ path="day_17/main.rs"
 [[bin]]
 name="day_18"
 path="day_18/main.rs"
+
+[[bin]]
+name="day_19"
+path="day_19/main.rs"
