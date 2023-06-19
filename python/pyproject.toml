@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "aoc_2020"
+version = "0.1.0"
+description = "Exercises from https://www.codingame.com"
+authors = ["Thomas Richard <thomas.richard@farfetch.com>"]
+
+[tool.poetry.dependencies]
+python = "~3.9"
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+
+[tool.poetry.scripts]
+aoc-2020-compute = "aoc_2020:compute"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
