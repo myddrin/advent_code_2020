@@ -30,14 +30,10 @@ class Rule:
                 letter=pattern.group(3),
                 password=pattern.group(4),
             )
-        raise ValueError('f"{line}" did not match regex')
+        raise ValueError(f'"{line}" did not match regex')
 
     def respect_policy_q1(self) -> bool:
-        letter_count = sum((
-            1 if letter == self.letter else 0
-            for letter in self.password
-        ))
-        return self.first <= letter_count <= self.second
+        return self.first <= self.password.count(self.letter) <= self.second
 
     def respect_policy_q2(self) -> bool:
         if len(self.password) < max((self.first, self.second)):
