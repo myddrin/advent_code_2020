@@ -83,10 +83,14 @@ class TestAllRules:
             {'faded blue': 5, 'dotted black': 6},
         )
 
-    def test_build_backward(self, small_ex_txt):
+    def test_get_backward(self, small_ex_txt):
         all_rules = AllRules.from_file(small_ex_txt)
-        backward = all_rules.build_backward()
-        assert backward['shiny gold'] == {'bright white', 'muted yellow', 'dark orange', 'light red'}
+        assert all_rules.get_backward('shiny gold') == {
+            'bright white',
+            'muted yellow',
+            'dark orange',
+            'light red',
+        }
 
     def test_count_subbags_ex1(self, small_ex_txt):
         all_rules = AllRules.from_file(small_ex_txt)

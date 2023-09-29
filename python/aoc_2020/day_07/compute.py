@@ -43,7 +43,11 @@ class BagRule:
 class AllRules:
 
     def __init__(self):
+        # dict[bag colour -> BagRule]
         self._forward: Dict[str, BagRule] = {}
+        # dict[bag colour -> list of bags that can contain it]
+        # not necessarily fully populated
+        self._backward_cache: Dict[str, Set[str]] = {}
 
     def get(self, colour: str) -> Optional[BagRule]:
         return self._forward.get(colour)
@@ -59,30 +63,19 @@ class AllRules:
 
         return sum(all_bags)
 
-    def _build_backward(self, backward: Dict[str, Set[str]], colour: str) -> Set[str]:
+    def get_backward(self, colour: str) -> Set[str]:
+        if colour in self._backward_cache:
+            return self._backward_cache[colour]
+
         found = set()
 
         for rule in self._forward.values():
             if colour in rule.contains:
                 found.add(rule.bag_colour)
-                if rule.bag_colour not in backward:
-                    backward[rule.bag_colour] = self._build_backward(backward, rule.bag_colour)
-                found.update(backward[rule.bag_colour])
+                found.update(self.get_backward(rule.bag_colour))
 
+        self._backward_cache[colour] = found
         return found
-
-    def build_backward(self) -> Dict[str, Set[str]]:
-        backward = {}
-
-        for rule in self._forward.values():
-            if rule.bag_colour not in backward:
-                backward[rule.bag_colour] = self._build_backward(backward, rule.bag_colour)
-
-            for key in rule.contains.keys():
-                if key not in backward:
-                    backward[key] = self._build_backward(backward, key)
-
-        return backward
 
     @classmethod
     def from_file(cls, filename: str) -> 'AllRules':
@@ -116,8 +109,7 @@ class Day07(BaseRunner):
 
     @classmethod
     def q1(cls, all_rules: AllRules, colour: str) -> Set[str]:
-        backward = all_rules.build_backward()
-        return backward[colour]
+        return all_rules.get_backward(colour)
 
     @classmethod
     def q2(cls, all_rule: AllRules, colour: str) -> int:
