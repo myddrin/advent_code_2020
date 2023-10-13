@@ -82,6 +82,12 @@ class Program:
 
             current_instruction += self._process(action)
 
+    def write_to_file(self, filename: str):
+        print(f'Writing program to {filename}')
+        with open(filename, 'w') as fout:
+            for line in self.program:
+                fout.write(f'{line.operation.value} {line.argument:+d}\n')
+
 
 @BaseRunner.register
 class Day08(BaseRunner):
@@ -124,6 +130,12 @@ class Day08(BaseRunner):
         raise RuntimeError('Tried all changes and found no runnable program')
 
     @classmethod
+    def build_args(cls):
+        parser = super().build_args()
+        parser.add_argument('--output', type=str, default=None)
+        return parser
+
+    @classmethod
     def compute(cls, cli_args):
         program = Program.from_file(cli_args.input)
 
@@ -132,6 +144,9 @@ class Day08(BaseRunner):
 
         fixed_program = cls.naive_q2(program)
         print(f'Q2: accumulator has value: {fixed_program.accumulator}')
+
+        if cli_args.output is not None:
+            fixed_program.write_to_file(cli_args.output)
 
 
 if __name__ == '__main__':
