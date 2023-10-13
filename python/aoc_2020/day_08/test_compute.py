@@ -27,9 +27,21 @@ def input_txt():
 class TestCompute:
 
     def test_q1_small(self, small_ex_txt):
-        program = Program(small_ex_txt)
+        program = Program.from_file(small_ex_txt)
         assert Day08.q1(program) == 5
 
     def test_q1(self, input_txt):
-        program = Program(input_txt)
+        program = Program.from_file(input_txt)
         assert Day08.q1(program) == 1420
+
+    def test_naive_q2_small(self, small_ex_txt):
+        program = Program.from_file(small_ex_txt)
+        result = Day08.naive_q2(program)
+        assert isinstance(result, Program)
+        assert result.accumulator == 8
+
+    def test_naive_q2(self, input_txt):
+        program = Program.from_file(input_txt)
+        result = Day08.naive_q2(program)
+        assert isinstance(result, Program)
+        assert result.accumulator == 1245
