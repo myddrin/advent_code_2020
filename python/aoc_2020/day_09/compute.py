@@ -48,37 +48,32 @@ class DataTransmission:
     def find_continuous_set_that_sums_to(self, target: int) -> Tuple[int, int]:
         """Returns first and last index of the set"""
         start_index = 0
-        end_index = 0
-        current_sum = 0
+        end_index = 1
+        current_sum = sum(self.numbers[start_index:end_index + 1])
 
         iteration = 0
         while end_index < len(self.numbers) - 1:
             iteration += 1
-            if current_sum == target:
-                print(f'Found sum in {iteration} iterations')
-                return start_index, end_index
 
             # print(
             #     f'Debug: [{start_index}]{self.numbers[start_index]} [{end_index}]{self.numbers[end_index]} '
             #     f'-> {current_sum=} {target=}',
             # )
-            action = ''
-            if current_sum > target:
-                action = 'shrink'
-                start_index += 1
-                end_index = start_index + 1
-            elif current_sum < target:
-                action = 'grow'
-                end_index += 1
-            if start_index == end_index:
-                action = 'shift'
-                start_index += 1
-                end_index += 2
 
-            # print(f'Debug: {action=}')
-            if not action:
-                raise RuntimeError('infinite loop!')
-            current_sum = sum(self.numbers[start_index:end_index + 1])
+            if current_sum == target:
+                print(f'Found sum in {iteration} iterations')
+                return start_index, end_index
+            elif current_sum > target:
+                # print('Debug: shrink')
+                current_sum -= self.numbers[start_index]
+                start_index += 1
+            elif current_sum < target:
+                # print('Debug: grow')
+                end_index += 1
+                current_sum += self.numbers[end_index]
+
+            if start_index == end_index:
+                raise RuntimeError('Cannot happen?')
 
         raise RuntimeError('Did not find a pair')
 
