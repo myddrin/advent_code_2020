@@ -2,6 +2,7 @@ import dataclasses
 from typing import (
     List,
     Set,
+    Tuple,
 )
 
 from aoc_2020 import BaseRunner
@@ -19,7 +20,7 @@ class DataTransmission:
             for line in fin:
                 numbers.append(int(line))
 
-        print(f'   -> Loaded {len(numbers)}')
+        print(f'   -> Loaded {len(numbers)} numbers')
         return cls(numbers)
 
     def get_numbers_before(self, index: int, preamble_size: int) -> Set[int]:
@@ -44,6 +45,47 @@ class DataTransmission:
 
         raise RuntimeError('Could not find an invalid number')
 
+    def find_continuous_set_that_sums_to(self, target: int) -> Tuple[int, int]:
+        """Returns first and last index of the set"""
+        start_index = 0
+        end_index = 0
+        current_sum = 0
+
+        iteration = 0
+        while end_index < len(self.numbers) - 1:
+            iteration += 1
+            if current_sum == target:
+                print(f'Found sum in {iteration} iterations')
+                return start_index, end_index
+
+            # print(
+            #     f'Debug: [{start_index}]{self.numbers[start_index]} [{end_index}]{self.numbers[end_index]} '
+            #     f'-> {current_sum=} {target=}',
+            # )
+            action = ''
+            if current_sum > target:
+                action = 'shrink'
+                start_index += 1
+                end_index = start_index + 1
+            elif current_sum < target:
+                action = 'grow'
+                end_index += 1
+            if start_index == end_index:
+                action = 'shift'
+                start_index += 1
+                end_index += 2
+
+            # print(f'Debug: {action=}')
+            if not action:
+                raise RuntimeError('infinite loop!')
+            current_sum = sum(self.numbers[start_index:end_index + 1])
+
+        raise RuntimeError('Did not find a pair')
+
+    def metric_from_range(self, start_index: int, end_index: int) -> int:
+        """Returns min and max numbers from a range"""
+        range = sorted(self.numbers[start_index:end_index + 1])
+        return range[0] + range[-1]
 
 @BaseRunner.register
 class Day09(BaseRunner):
@@ -59,8 +101,12 @@ class Day09(BaseRunner):
     def compute(cls, cli_args):
         data = DataTransmission.from_file(cli_args.input)
 
-        first_invaild = data.find_first_invalid(cli_args.preamble_size)
-        print(f'Q1: first invalid number is {first_invaild}')
+        first_invalid = data.find_first_invalid(cli_args.preamble_size)
+        print(f'Q1: first invalid number is {first_invalid}')
+
+        range = data.find_continuous_set_that_sums_to(first_invalid)
+        metric = data.metric_from_range(*range)
+        print(f'Q2: found sum using range {range} which sums to {metric}')
 
 
 if __name__ == '__main__':

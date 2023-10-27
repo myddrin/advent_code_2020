@@ -46,3 +46,15 @@ class TestDataTransmission:
     def test_find_first_invalid_input(self, input_txt):
         res = DataTransmission.from_file(input_txt).find_first_invalid(25)
         assert res == 1930745883
+
+    def test_find_continuous_small_ex(self, small_ex_txt):
+        data = DataTransmission.from_file(small_ex_txt)
+        res = data.find_continuous_set_that_sums_to(127)
+        assert res == (2, 5)
+        assert data.metric_from_range(*res) == 62
+
+    def test_find_continuous_input(self, input_txt):
+        data = DataTransmission.from_file(input_txt)
+        res = data.find_continuous_set_that_sums_to(1930745883)
+        assert res == (553, 569)
+        assert data.metric_from_range(*res) == 268878261
