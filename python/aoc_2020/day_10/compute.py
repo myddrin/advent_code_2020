@@ -43,25 +43,21 @@ class Adapters:
 
         return diffs
 
-    def _check_chain_brute(self, current: List, left: Set[int]) -> int:
-        add = []
-        last = current[-1]
+    def count_permutations(self):
+        left_to_check = [0] + self.original[:-1]
+        permutations = {
+            self.original[-1]: 1,  # original link to the adapter
+        }
 
-        for d in range(1, 4):
-            potential_next = last + d
-            if potential_next in left:
-                add.append(self._check_chain_brute(current + [potential_next], left - {potential_next}))
+        while left_to_check:
+            current = left_to_check.pop()
 
-        if not add and last - self.device_joltage <= 3:
-            add.append(1)
+            permutations[current] = sum(
+                permutations.get(current + i, 0)
+                for i in range(1, 4)
+            )
 
-        return sum(add)
-
-    def count_permutations(self) -> int:
-        return self._check_chain_brute(
-            [0],
-            set(self.original),
-        )
+        return permutations[0]
 
 
 @BaseRunner.register

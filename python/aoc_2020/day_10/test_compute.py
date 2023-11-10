@@ -80,6 +80,6 @@ class TestAdapters:
         obj = Adapters.from_file(input_txt)
         assert Day10.q1(obj) == 2080
 
-    # def test_q2(self, input_txt):
-    #     obj = Adapters.from_file(input_txt)
-    #     assert Day10.q2(obj) == 6908379398144
+    def test_q2(self, input_txt):
+        obj = Adapters.from_file(input_txt)
+        assert Day10.q2(obj) == 6908379398144
