@@ -1,4 +1,5 @@
 import dataclasses
+from copy import deepcopy
 from enum import Enum
 from typing import (
     Dict,
@@ -36,9 +37,42 @@ class Coordinate:
 class SeatMap:
     # map of seats occupancy
     map: Dict[Coordinate, bool]
+    neighbours: Dict[Coordinate, List[Coordinate]]
+    occupied_threshold: int = 4
 
     @classmethod
-    def from_file(cls, filename: str) -> 'SeatMap':
+    def compute_nearest_neighbours(cls, seat_map: Dict[Coordinate, bool]) -> Dict[Coordinate, List[Coordinate]]:
+        direct_neighbours: Dict[Coordinate, List[Coordinate]] = {}
+        for coord in seat_map.keys():
+            neighbours = [n for n in coord.all_adjacent() if n in seat_map]
+            direct_neighbours[coord] = neighbours
+        return direct_neighbours
+
+    @classmethod
+    def compute_first_seen_neighbours(cls, seat_map: Dict[Coordinate, bool]) -> Dict[Coordinate, List[Coordinate]]:
+        first_seen_neighbours: Dict[Coordinate, List[Coordinate]] = {}
+        length = max((c.x for c in seat_map.keys())) + 1  # starts at 0
+        height = max((c.y for c in seat_map.keys())) + 1
+        for coord in seat_map.keys():
+            neighbours = []
+            for adj in coord.all_adjacent():
+                direction = Coordinate(adj.x - coord.x, adj.y - coord.y)
+
+                while True:
+                    is_seat = adj in seat_map
+                    if is_seat:
+                        neighbours.append(adj)
+                        break
+                    # otherwise continue until the end
+                    adj = Coordinate(adj.x + direction.x, adj.y + direction.y)
+                    if adj.x < 0 or adj.x >= length or adj.y < 0 or adj.y > height:
+                        break
+            first_seen_neighbours[coord] = neighbours
+
+        return first_seen_neighbours
+
+    @classmethod
+    def from_file(cls, filename: str, *, direct_neighbours: bool = True, occupied_threshold: int = 4) -> 'SeatMap':
         print(f'Opening {filename}')
         loaded_map = {}
         with open(filename, 'r') as fin:
@@ -50,7 +84,15 @@ class SeatMap:
                     pos = Coordinate(x, y)
                     loaded_map[pos] = character == Cell.OccupiedSeat.value
 
-        return cls(map=loaded_map)
+        if direct_neighbours:
+            neighbours = cls.compute_nearest_neighbours(loaded_map)
+        else:
+            neighbours = cls.compute_first_seen_neighbours(loaded_map)
+        return cls(
+            map=loaded_map,
+            neighbours=neighbours,
+            occupied_threshold=occupied_threshold,
+        )
 
     @property
     def occupied_seats(self) -> int:
@@ -62,7 +104,7 @@ class SeatMap:
 
     def count_nearby_occupied(self, where: Coordinate) -> int:
         neighbours = 0
-        for o in where.all_adjacent():
+        for o in self.neighbours[where]:
             if self.map.get(o):  # None or False are rejected
                 neighbours += 1
         return neighbours
@@ -79,7 +121,7 @@ class SeatMap:
             new_state = is_occupied
             if not is_occupied and neighbours == 0:
                 new_state = True
-            elif is_occupied and neighbours >= 4:
+            elif is_occupied and neighbours >= self.occupied_threshold:
                 new_state = False
 
             changed |= new_state != is_occupied
@@ -95,7 +137,7 @@ class Day11(BaseRunner):
     day = 11
 
     @classmethod
-    def q1(cls, seats: SeatMap) -> int:
+    def simulate(cls, seats: SeatMap) -> int:
         i = 1
         while seats.simulate_people():
             if i % 10000 == 0:
@@ -106,9 +148,11 @@ class Day11(BaseRunner):
 
     @classmethod
     def compute(cls, cli_args):
-        map = SeatMap.from_file(cli_args.input)
-        n_occupied = cls.q1(map)
-        print(f'Q1: {n_occupied} are occupied')
+        n_occupied_1 = cls.simulate(SeatMap.from_file(cli_args.input, direct_neighbours=True, occupied_threshold=4))
+        print(f'Q1: {n_occupied_1} are occupied')
+
+        n_occupied_2 = cls.simulate(SeatMap.from_file(cli_args.input, direct_neighbours=False, occupied_threshold=5))
+        print(f'Q2: {n_occupied_2} are occupied')
 
 
 if __name__ == '__main__':

@@ -8,6 +8,7 @@ import aoc_2020.day_07.compute  # noqa - make it available
 import aoc_2020.day_08.compute  # noqa - make it available
 import aoc_2020.day_09.compute  # noqa - make it available
 import aoc_2020.day_10.compute  # noqa - make it available
+import aoc_2020.day_11.compute  # noqa - make it available
 
 
 def compute():
